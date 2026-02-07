@@ -1,7 +1,20 @@
 import { Hono } from "hono";
 import { getMaskFromChars, normalize, wordMask } from "./utils";
+import { cors } from "hono/cors"
 
 const app = new Hono();
+
+app.use(
+  "*",
+  cors({
+    origin: (origin) => {
+      if (!origin) return "*"
+      if (origin.includes("localhost")) return origin
+      if (origin.endsWith(".pages.dev")) return origin
+      return null
+    },
+  })
+);
 
 app.get("/", (c) => {
   return c.text("Cari Kata");

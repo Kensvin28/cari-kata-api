@@ -58,34 +58,4 @@ app.get('/search', async (c) => {
   )
 })
 
-app.post('/populate', async (c) => {
-  const words: string[] = await c.req.json()
-
-  const statements = []
-
-  for (const w of words) {
-    const norm = normalize(w)
-    const len = w.length
-    const mask = wordMask(norm)
-
-    statements.push(
-      c.env.DB
-        .prepare(
-          "INSERT OR IGNORE INTO words (word, norm, len, mask) VALUES (?, ?, ?, ?)"
-        )
-        .bind(w, norm, len, mask)
-    )
-  }
-
-  // D1 limit: max 100 statements per batch
-  for (let i = 0; i < statements.length; i += 100) {
-    await c.env.DB.batch(statements.slice(i, i + 100))
-  }
-
-  return c.json({
-    inserted: words.length,
-  })
-})
-
-
 export default app;

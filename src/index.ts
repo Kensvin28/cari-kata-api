@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { getMaskFromChars } from "./utils";
+import { getMaskFromChars, normalize, wordMask } from "./utils";
 
 const app = new Hono();
 
@@ -57,5 +57,35 @@ app.get('/search', async (c) => {
     (await c.env.DB.prepare(sql).bind(...params).all()).results.map((res: any) => res.word)
   )
 })
+
+app.post('/populate', async (c) => {
+  const words: string[] = await c.req.json()
+
+  const statements = []
+
+  for (const w of words) {
+    const norm = normalize(w)
+    const len = w.length
+    const mask = wordMask(norm)
+
+    statements.push(
+      c.env.DB
+        .prepare(
+          "INSERT OR IGNORE INTO words (word, norm, len, mask) VALUES (?, ?, ?, ?)"
+        )
+        .bind(w, norm, len, mask)
+    )
+  }
+
+  // D1 limit: max 100 statements per batch
+  for (let i = 0; i < statements.length; i += 100) {
+    await c.env.DB.batch(statements.slice(i, i + 100))
+  }
+
+  return c.json({
+    inserted: words.length,
+  })
+})
+
 
 export default app;

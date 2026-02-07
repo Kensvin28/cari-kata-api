@@ -28,3 +28,15 @@ export function getMaskFromChars(chars: string): number {
     }
     return mask
 }
+
+export function normalize(word: string) {
+  return String.prototype.normalize.call(word.toLowerCase(), 'NFD').replace(/[\u0300-\u036f]/g, '')
+}
+
+export function wordMask(norm: string) {
+  let mask = 0
+  for (const c of new Set(norm)) {
+    mask |= 1 << (c.charCodeAt(0) - 97)
+  }
+  return mask
+}

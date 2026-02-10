@@ -10,7 +10,7 @@ app.use(
     origin: (origin) => {
       if (!origin) return "*"
       if (origin.includes("localhost")) return origin
-      if (origin.endsWith(".pages.dev")) return origin
+      if (origin.endsWith("kensvin28.workers.dev")) return origin
       return null
     },
   })

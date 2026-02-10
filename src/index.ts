@@ -59,10 +59,20 @@ app.get('/search', async (c) => {
   }
 
   if (fixed) {
-    for (const rule of fixed.split(',')) {
-      const [pos, char] = rule.split(":");
-      sql += " AND SUBSTR(word, ?, 1) = ?";
-      params.push(Number(pos), char);
+    if (fixed.includes(',')) {
+      for (const rule of fixed.split(',')) {
+        const [pos, char] = rule.split(":");
+        sql += " AND SUBSTR(word, ?, 1) = ?";
+        params.push(Number(pos), char);
+      }
+    } else if (fixed.includes('_')) {
+      for (let i = 0; i < fixed.length; i++) {
+        const char = fixed[i];
+        if (char !== '_') {
+          sql += " AND SUBSTR(word, ?, 1) = ?";
+          params.push(i + 1, char);
+        }
+      }
     }
   }
   // return the results as array of strings 

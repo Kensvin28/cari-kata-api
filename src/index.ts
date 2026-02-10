@@ -34,6 +34,25 @@ app.get('/search', async (c) => {
   const params: any[] = []
 
   let sql = "SELECT word FROM words WHERE 1=1";
+
+  if (fixed) {
+    if (fixed.includes(',')) {
+      for (const rule of fixed.split(',')) {
+        const [pos, char] = rule.split(":");
+        sql += " AND SUBSTR(word, ?, 1) = ?";
+        params.push(Number(pos), char);
+      }
+    } else if (fixed.includes('_')) {
+      for (let i = 0; i < fixed.length; i++) {
+        const char = fixed[i];
+        if (char !== '_') {
+          sql += " AND SUBSTR(word, ?, 1) = ?";
+          params.push(i + 1, char);
+        }
+      }
+      len = fixed.length.toString();
+    }
+  }
   
   if (len) {
     sql += ` AND len = ?`;
@@ -58,23 +77,6 @@ app.get('/search', async (c) => {
     params.push(mask);
   }
 
-  if (fixed) {
-    if (fixed.includes(',')) {
-      for (const rule of fixed.split(',')) {
-        const [pos, char] = rule.split(":");
-        sql += " AND SUBSTR(word, ?, 1) = ?";
-        params.push(Number(pos), char);
-      }
-    } else if (fixed.includes('_')) {
-      for (let i = 0; i < fixed.length; i++) {
-        const char = fixed[i];
-        if (char !== '_') {
-          sql += " AND SUBSTR(word, ?, 1) = ?";
-          params.push(i + 1, char);
-        }
-      }
-    }
-  }
   // return the results as array of strings 
   return c.json(
     (await c.env.DB.prepare(sql).bind(...params).all()).results.map((res: any) => res.word)

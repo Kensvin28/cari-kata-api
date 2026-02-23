@@ -21,7 +21,6 @@ app.get("/", (c) => {
 });
 
 app.get('/search', async (c) => {
-  // validate first
   let {
     prefix,
     len,
@@ -61,9 +60,9 @@ app.get('/search', async (c) => {
   
   if (prefix) {
     sql += ` AND word LIKE ?`;
+    prefix = decodeURIComponent(prefix);
     params.push(`${prefix}%`);
   }
-
 
   if (required) {
     sql += " AND (mask & ?) = ?";

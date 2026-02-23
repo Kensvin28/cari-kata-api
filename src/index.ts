@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { getMaskFromChars, normalize, wordMask } from "./utils";
+import { getMaskFromChars } from "./utils";
 import { cors } from "hono/cors"
 
 const app = new Hono();
@@ -9,7 +9,7 @@ app.use(
   cors({
     origin: (origin) => {
       if (!origin) return "*"
-      if (origin.includes("localhost")) return origin
+      if (origin.includes("http://localhost:5173/")) return origin
       if (origin.endsWith("kensvin28.workers.dev")) return origin
       return null
     },
@@ -30,7 +30,7 @@ app.get('/search', async (c) => {
   } = c.req.query()
 
   prefix = prefix?.toLowerCase() || '';
-  const params: any[] = []
+  const params: (string | number)[] = []
 
   let sql = "SELECT word FROM words WHERE 1=1";
 
@@ -52,15 +52,26 @@ app.get('/search', async (c) => {
       len = fixed.length.toString();
     }
   }
+
+if (prefix && !/^[a-zA-Z]+$/.test(prefix)) {
+  return c.json({ error: 'Invalid prefix' }, 400)
+}
+
   
   if (len) {
+    if (isNaN(Number(len)) || Number(len) < 1 || Number(len) > c.env.MAX_WORD_LENGTH) {
+      return c.json({ error: 'Invalid length' }, 400)
+    }
     sql += ` AND len = ?`;
     params.push(Number(len));
   }
   
   if (prefix) {
+    if (!/^[a-zA-Z]+$/.test(prefix)) {
+      return c.json({ error: 'Invalid prefix' }, 400)
+    }
+
     sql += ` AND word LIKE ?`;
-    prefix = decodeURIComponent(prefix);
     params.push(`${prefix}%`);
   }
 

@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { getMaskFromChars } from "./utils";
-import { cors } from "hono/cors"
+import { getMaskFromChars, filterWordsByBag } from "./utils";
+import { cors } from "hono/cors";
 
 const app = new Hono();
 
@@ -27,6 +27,7 @@ app.get('/search', async (c) => {
     required,
     excluded,
     fixed,
+    bag
   } = c.req.query()
 
   prefix = prefix?.toLowerCase() || '';
@@ -53,11 +54,10 @@ app.get('/search', async (c) => {
     }
   }
 
-if (prefix && !/^[a-zA-Z]+$/.test(prefix)) {
-  return c.json({ error: 'Invalid prefix' }, 400)
-}
+  if (prefix && !/^[a-zA-Z]+$/.test(prefix)) {
+    return c.json({ error: 'Invalid prefix' }, 400)
+  }
 
-  
   if (len) {
     if (isNaN(Number(len)) || Number(len) < 1 || Number(len) > c.env.MAX_WORD_LENGTH) {
       return c.json({ error: 'Invalid length' }, 400)
@@ -87,10 +87,23 @@ if (prefix && !/^[a-zA-Z]+$/.test(prefix)) {
     params.push(mask);
   }
 
-  // return the results as array of strings 
-  return c.json(
+  if (bag) {
+    const bagMask = getMaskFromChars(bag);
+    sql += " AND (mask & ?) = mask";
+    params.push(bagMask);
+    
+    sql += " AND len <= ?";
+    params.push(bag.length);
+  }
+
+  let results =
     (await c.env.DB.prepare(sql).bind(...params).all()).results.map((res: any) => res.word)
-  )
+
+  if (bag) {
+    results = filterWordsByBag(results, bag);
+  }
+
+  return c.json(results);
 })
 
 export default app;

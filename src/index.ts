@@ -9,7 +9,7 @@ app.use(
   cors({
     origin: (origin) => {
       if (!origin) return "*"
-      if (origin.includes("http://localhost:5173/")) return origin
+      if (origin.includes("http://localhost:5173")) return origin
       if (origin.endsWith("kensvin28.workers.dev")) return origin
       return null
     },

@@ -36,7 +36,7 @@ app.get('/search', async (c) => {
   let sql = "SELECT word FROM words WHERE 1=1";
 
   if (fixed) {
-    if (fixed.includes(',')) {
+    if (fixed.includes(':')) {
       for (const rule of fixed.split(',')) {
         const [pos, char] = rule.split(":");
         sql += " AND SUBSTR(word, ?, 1) = ?";

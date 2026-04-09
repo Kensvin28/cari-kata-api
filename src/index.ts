@@ -53,8 +53,8 @@ app.get('/search', async (c) => {
       len = fixed.length.toString();
     }
   }
-
-  if (prefix && !/^[a-zA-Z]+$/.test(prefix)) {
+  
+  if (prefix && !/^[a-zA-Z]+([ a-zA-Z]+)*$/.test(prefix)) {
     return c.json({ error: 'Invalid prefix' }, 400)
   }
 
@@ -67,10 +67,6 @@ app.get('/search', async (c) => {
   }
   
   if (prefix) {
-    if (!/^[a-zA-Z]+$/.test(prefix)) {
-      return c.json({ error: 'Invalid prefix' }, 400)
-    }
-
     sql += ` AND word LIKE ?`;
     params.push(`${prefix}%`);
   }

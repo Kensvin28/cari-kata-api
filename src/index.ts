@@ -27,7 +27,8 @@ app.get('/search', async (c) => {
     required,
     excluded,
     fixed,
-    bag
+    bag,
+    simple
   } = c.req.query()
 
   prefix = prefix?.toLowerCase() || '';
@@ -90,6 +91,10 @@ app.get('/search', async (c) => {
     
     sql += " AND len <= ?";
     params.push(bag.length);
+  }
+
+  if (simple && simple !== '0' && simple !== 'false') {
+    sql += " AND is_simple = 1";
   }
 
   let results =

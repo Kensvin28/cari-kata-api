@@ -1,47 +1,32 @@
-// export async function readWordList(
-//   path: string,
-//   env?: { ASSETS?: any }
-// ): Promise<string | null> {
-//   // Cloudflare Workers
-//   if (env?.ASSETS) {
-//     const res = await env.ASSETS.fetch(
-//       `${path}`
-//     )
-//     if (!res.ok) return null
-//     return await res.text()
-//   }
-
-//   // Bun fallback for dev
-//   if (typeof Bun !== 'undefined') {
-//     const file = Bun.file(`${path}`)
-//     if (await file.exists()) {
-//       return await file.text()
-//     }
-//   }
-//   return null
-// }
-
 // Create a bitmask from a string of characters, where each bit represents the presence of a letter
 export function getMaskFromChars(chars: string): number {
     let mask = 0;
     for (const char of chars) {
-      mask |= 1 << (char.charCodeAt(0) - 97)
+      const code = char.codePointAt(0) || 0;
+      if (code < 97 || code > 122) continue; // Skip non-lowercase letters
+      mask |= 1 << (code - 97);
     }
-    return mask
+    return mask;
 }
 
 // Normalize a word by converting to lowercase and removing diacritics
 export function normalize(word: string) {
-  return String.prototype.normalize.call(word.toLowerCase(), 'NFD').replace(/[\u0300-\u036f]/g, '')
+  return String.prototype.normalize.call(word.toLowerCase(), 'NFD').replaceAll(/[\u0300-\u036f]/g, '')
 }
 
 // Create a bitmask for a word, where each bit represents the presence of a letter
 export function wordMask(norm: string) {
-  let mask = 0
-  for (const c of new Set(norm)) {
-    mask |= 1 << (c.charCodeAt(0) - 97)
+  let mask = 0;
+  for (const char of new Set(norm)) {
+    const code = char.codePointAt(0) || 0;
+    if (code < 97 || code > 122) continue; // Skip non-lowercase letters
+    mask |= 1 << (code - 97);
   }
-  return mask
+  return mask;
+}
+
+export function isSimple(word: string): boolean {
+  return !/[.\- ()%,]/.test(word);
 }
 
 // Helper function to count letter frequencies in a string

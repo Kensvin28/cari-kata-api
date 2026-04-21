@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cari-kata-api",
   "main": "src/index.ts",
-  "compatibility_date": "2026-02-01",
+  "compatibility_date": "2026-04-19",
   "assets": {
     "directory": "./src/assets",
     "binding": "ASSETS"

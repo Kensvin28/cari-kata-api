@@ -11,9 +11,9 @@ const allWords = getWordsFromFile(fs.readFileSync(wordFile, "utf-8"));
 const words = sampleWords(allWords, SAMPLE_SIZE, SEED);
 const tmpFile = path.resolve("./migrations/insert_sample_words.sql");
 let sql = "";
-for (let i = 0; i < words.length; i += 1) {
-  const { word, norm, len, mask, simple } = words[i];
-  sql += `INSERT OR IGNORE INTO words (word, norm, len, mask, is_simple) VALUES ('${word.replace(/'/g, "''")}', '${norm.replace(/'/g, "''")}', ${len}, ${mask}, ${simple ? 1 : 0});\n`;
+for (const w of words) {
+  const { word, norm, len, mask, simple } = w;
+  sql += `INSERT OR IGNORE INTO words (word, norm, len, mask, is_simple) VALUES ('${word.replaceAll("'", "''")}', '${norm.replaceAll("'", "''")}', ${len}, ${mask}, ${simple ? 1 : 0});\n`;
 }
 fs.writeFileSync(tmpFile, sql);
 console.log("Seed complete!");

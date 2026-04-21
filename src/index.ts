@@ -134,6 +134,24 @@ function validateQueryParam(query: Record<string, string>): void {
   }
 }
 
+function handleError(e: Error): Record<string, string> {
+  if (e instanceof LengthError) {
+    return { error: "Invalid length" };
+  } else if (
+    e instanceof InvalidValueError &&
+    e.message === "Invalid simple value"
+  ) {
+    return { error: "Invalid simple value" };
+  } else if (
+    e instanceof InvalidValueError &&
+    e.message === "Invalid character"
+  ) {
+    return { error: "Invalid character" };
+  } else {
+    return { error: "Unknown error" };
+  }
+}
+
 const app = new Hono()
   .use(
     "*",
@@ -177,18 +195,7 @@ const app = new Hono()
       sql = applyBag(sql, params, bag);
       sql = applySimple(sql, simple);
     } catch (e) {
-      if (e instanceof LengthError) {
-        return c.json({ error: "Invalid length" }, 400);
-      }
-      if (
-        e instanceof InvalidValueError &&
-        e.message === "Invalid simple value"
-      ) {
-        return c.json({ error: "Invalid simple value" }, 400);
-      }
-      if (e instanceof InvalidValueError && e.message === "Invalid character") {
-        return c.json({ error: "Invalid character" }, 400);
-      }
+      return c.json(handleError(e as Error), 400);
     }
 
     let results = (

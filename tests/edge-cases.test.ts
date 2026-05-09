@@ -99,4 +99,36 @@ describe("Edge Cases", () => {
     expect(res.status).toBe(400);
     expect(await res.json()).toEqual({ error: "Invalid character" });
   });
+
+  it('should return success for uppercase prefix input', async () => {
+    const res = await client.search.$get({
+      query: { prefix: "BER" },
+    });
+
+    expect(res.status).toBe(200);
+  });
+ 
+	it('should return success for uppercase required input', async () => {
+		const res = await client.search.$get({
+			query: { required: "BRMN" },
+		});
+
+		expect(res.status).toBe(200);
+	});
+ 
+	it('should return success for uppercase excluded input', async () => {
+		const res = await client.search.$get({
+			query: { excluded: "BeR" },
+		});
+
+		expect(res.status).toBe(200);
+	});
+ 
+	it('should return success for uppercase bag input', async () => {
+		const res = await client.search.$get({
+			query: { bag: "Kentas" },
+		});
+
+		expect(res.status).toBe(200);
+	});
 });

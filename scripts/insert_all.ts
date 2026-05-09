@@ -6,11 +6,20 @@ import { processWord } from "../src/utils";
 const schemaFile = path.resolve("./scripts/create.sql");
 const wordFile = path.resolve("./src/assets/word_list.txt");
 
+function runSql(file: string, label: string) {
+  const result = spawnSync(
+    "wrangler",
+    ["d1", "execute", "cari-kata", "--local", `--file=${file}`],
+    { stdio: "inherit", shell: false }
+  );
+  if (result.status !== 0) {
+    throw new Error(`wrangler failed at: ${label} (exit ${result.status})`);
+  }
+}
+
 // 1. Apply schema
 console.log("Applying schema...");
-spawnSync(`wrangler d1 execute cari-kata --local --file=${schemaFile}`, {
-  stdio: "inherit",
-});
+runSql(schemaFile, "schema");
 
 // 2. Process words
 console.log("Processing words...");
@@ -36,16 +45,20 @@ for (let i = 0; i < words.length; i += BATCH_SIZE) {
     )
     .join("\n");
 
-  fs.writeFileSync(tmpFile, sql);
+  try {
+    fs.writeFileSync(tmpFile, sql, { encoding: "utf-8", flag: "w" });
+  } catch (e) {
+    console.error(`writeFileSync failed at batch ${i}–${i + BATCH_SIZE}:`);
+    console.error("  First word in batch:", batch[0]?.word);
+    console.error("  SQL snippet:", sql.slice(0, 200));
+    throw e;
+  }
 
-  spawnSync(`wrangler d1 execute cari-kata --local --file=${tmpFile}`, {
-    stdio: "inherit",
-  });
-
+  runSql(tmpFile, `batch ${i}–${i + BATCH_SIZE}`);
   console.log(
     `Inserted ${Math.min(i + BATCH_SIZE, words.length)}/${words.length} words`,
   );
 }
 
-fs.unlinkSync(tmpFile);
+if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
 console.log("Seed complete!");

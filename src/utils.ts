@@ -4,7 +4,7 @@ import { InvalidValueError } from "./errors";
 export function getMaskFromChars(chars: string): number {
   let mask = 0;
   for (const char of chars) {
-    const code = char.codePointAt(0) || 0;
+    const code = char.toLowerCase().codePointAt(0) || 0;
     if (code < 97 || code > 122)
       throw new InvalidValueError("Invalid character");
     mask |= 1 << (code - 97);
@@ -18,7 +18,7 @@ export function processWord(word: string) {
     word,
     norm,
     len: word.length,
-    mask: wordMask(norm),
+    mask: wordMaskForInsert(norm),
     simple: isSimple(norm),
   };
 }
@@ -28,6 +28,16 @@ export function normalize(word: string) {
   return String.prototype.normalize
     .call(word.toLowerCase(), "NFD")
     .replaceAll(/[\u0300-\u036f]/g, "");
+}
+
+function wordMaskForInsert(norm: string) {
+  let mask = 0;
+  for (const char of new Set(norm)) {
+    const code = char.codePointAt(0) || 0;
+    if (code < 97 || code > 122) continue;
+    mask |= 1 << (code - 97);
+  }
+  return mask;
 }
 
 // Create a bitmask for a word, where each bit represents the presence of a letter
